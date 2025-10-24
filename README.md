@@ -63,24 +63,6 @@ Authorization: Bearer <your_jwt_token>
 | `GET` | `/api/test/secure` | Access a protected route (requires a valid token) |
 
 ---
-
-## 🧱 Project Structure
-
-```
-
-src/main/java/com/digitalwallet/
-├── config/                # Configuration files (CORS, Beans, etc.)
-├── controller/            # REST Controllers (AuthController, TestController)
-├── model/                 # Entity and DTO classes
-├── repository/            # Database Repositories (UserRepository)
-├── security/              # JWT utilities and filters
-├── service/               # Business logic (UserService, AuthService)
-└── DigitalWalletApplication.java
-
-````
-
----
-
 ## 🧾 Example Requests (Postman)
 
 ### Register a User
