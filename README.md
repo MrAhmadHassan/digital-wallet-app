@@ -1,198 +1,251 @@
-```markdown
-# 💳 Digital Wallet API
+🚀 Spire Wallet — Backend
+💡 Overview
 
-A **modular Spring Boot application** built from scratch — step by step — following a production-grade architecture.  
-Currently, the project includes a **manual JWT authentication** mechanism (without Spring Security yet).  
-Future phases will integrate **Spring Security**, **microservices**, and **Kubernetes deployment** for a full-scale enterprise setup.
+The Spire Wallet backend is a secure and modular financial service built with Spring Boot (Java 21).
+It provides APIs for user registration, authentication, and wallet balance management with clean architecture and JWT-based authentication.
 
----
+🧱 Tech Stack
+Layer	Technology
+Backend Framework	Spring Boot
+Language	Java 21
+Database	MySQL
+ORM	Spring Data JPA
+Security	Spring Security + JWT
+Build Tool	Maven
+Testing Tool	Postman / cURL
+⚙️ Module 1 — Core App Setup & Authentication
+📖 Overview
 
-## 🚀 Current Progress
+This module sets up the Spring Boot project structure, integrates Spring Security, and configures JWT-based authentication for secure API access.
 
-### ✅ Phase 1 — Manual JWT Authentication (Completed)
-We’ve successfully implemented a **JWT-based authentication system** manually, without relying on Spring Security, to deeply understand the authentication workflow.
+🔑 Features
 
-### 🔒 Current Modules
-- **User Registration & Login**
-- **JWT Token Generation and Validation**
-- **Secure Endpoints using Token Verification**
+✅ Spring Boot + JPA setup
+✅ User entity and repository configuration
+✅ JWT-based authentication
+✅ Token filter for secure routes
+✅ Global exception handling
 
----
+📁 Endpoints
+1️⃣ Health Check
 
-## ⚙️ Tech Stack
+GET /api/health
 
-| Layer | Technology |
-|-------|-------------|
-| Language | Java 21 |
-| Framework | Spring Boot 3+ |
-| Build Tool | Maven |
-| Database | MySQL |
-| Authentication | JWT (Manual Implementation) |
-| API Testing | Postman |
-| IDE | IntelliJ IDEA / VS Code |
+Verifies that the application is running.
 
----
+Response:
 
-## 🧠 Authentication Flow
-
-1. **User registers or logs in** using the authentication endpoints.
-2. The server validates credentials and **generates a JWT token**.
-3. The client sends this token in the `Authorization` header when accessing secure routes.
-4. The backend **validates the token manually** using a custom filter/interceptor.
-
-### Example:
-```
-
-Authorization: Bearer <your_jwt_token>
-
-```
-
----
-
-## 📡 API Endpoints
-
-### 🔐 Authentication
-| Method | Endpoint | Description |
-|---------|-----------|-------------|
-| `POST` | `/api/auth/register` | Register a new user |
-| `POST` | `/api/auth/login` | Authenticate a user and receive a JWT token |
-
-### 🧩 Secure Test Endpoint
-| Method | Endpoint | Description |
-|---------|-----------|-------------|
-| `GET` | `/api/test/secure` | Access a protected route (requires a valid token) |
-
----
-## 🧾 Example Requests (Postman)
-
-### Register a User
-**POST** `http://localhost:8080/api/auth/register`  
-**Body (JSON):**
-```json
 {
-  "username": "ahmad",
-  "email": "ahmad@example.com",
-  "password": "password123"
+  "status": "UP"
 }
-````
 
----
+2️⃣ Login (JWT Token Generation)
 
-### Login User
+POST /api/auth/login
 
-**POST** `http://localhost:8080/api/auth/login`
-**Body (JSON):**
+Authenticates user and returns JWT token.
 
-```json
+Request Body:
+
 {
-  "username": "ahmad",
-  "password": "password123"
+  "email": "john@example.com",
+  "password": "123456"
 }
-```
 
-**Response:**
 
-```json
+Response:
+
 {
-  "token": "<jwt_token_here>"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
-```
 
----
+3️⃣ Token Validation
 
-### Access Secure Endpoint
+All protected routes (like /api/wallets, /api/users/me) require a valid JWT token in headers:
 
-**GET** `http://localhost:8080/api/test/secure`
-**Headers:**
+Authorization: Bearer <token>
 
-```
-Authorization: Bearer <jwt_token_here>
-```
+👤 Module 2 — User Management
+📖 Overview
 
-**Response (if valid token):**
+The User Management Module handles user registration, authentication, and retrieval.
+It also auto-creates a wallet for each new user.
 
-```json
+🔑 Features
+
+✅ Register users
+✅ Authenticate and generate JWT
+✅ Retrieve user details
+✅ Auto-create wallet upon registration
+
+📁 Endpoints
+1️⃣ Register User
+
+POST /api/users/register
+
+Request Body:
+
 {
-  "message": "Secure content accessed successfully!"
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "123456"
 }
-```
 
-**Response (if invalid or missing token):**
 
-```json
+Response:
+
 {
-  "error": "403 Forbidden"
+  "message": "User registered successfully!",
+  "walletId": 1
 }
-```
 
----
+2️⃣ Login User
 
-## 🧭 Next Steps (Upcoming)
+POST /api/users/login
 
-### 🔜 Phase 2 — Integrate Spring Security
+Request Body:
 
-* Replace manual JWT checks with **Spring Security filters**.
-* Implement **Role-Based Access Control (RBAC)**.
-* Secure endpoints based on roles (e.g., ADMIN, USER).
-* Harden security for **production deployment**.
+{
+  "email": "john@example.com",
+  "password": "123456"
+}
 
-### 🧩 Future Modules
 
-* Wallet management (balance, transactions)
-* Transaction history & audit trail
-* Microservices communication
-* Kubernetes deployment with ConfigMaps and Secrets
-* CI/CD setup using Argo CD
+Response:
 
----
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI..."
+}
 
-## 🧰 Local Setup Instructions
+3️⃣ Get Logged-in User Details
 
-### 1️⃣ Clone the Repository
+GET /api/users/me
 
-```bash
-git clone https://github.com/<your-username>/digital-wallet.git
-cd digital-wallet
-```
+Headers:
 
-### 2️⃣ Configure Database
+Authorization: Bearer <JWT_TOKEN>
 
-Edit your `application.yml` or `application.properties`:
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/digital_wallet
-    username: root
-    password: yourpassword
-  jpa:
-    hibernate:
-      ddl-auto: update
-```
+Response:
 
-### 3️⃣ Run the Application
+{
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com"
+}
 
-```bash
-mvn spring-boot:run
-```
+💰 Module 3 — Wallet Management
+📖 Overview
 
-### 4️⃣ Test Endpoints in Postman
+The Wallet Management Module manages wallet balances linked to each user.
+It provides functionality to add funds, deduct funds safely, and retrieve wallet details.
 
-Use the sample requests above to test authentication and secure routes.
+🔑 Features
 
----
+✅ Auto-created wallet for new users
+✅ Add or deduct balance (using BigDecimal)
+✅ Prevent negative balances
+✅ JWT-secured wallet operations
 
-## ✨ Notes
+📁 Endpoints
+1️⃣ Get Wallet Details
 
-* This documentation will expand as we develop each module.
-* Each phase focuses on **deep understanding before automation**.
-* Production-grade configurations (like Spring Security, Docker, and Kubernetes) will follow in subsequent stages.
+GET /api/wallets
 
----
+Headers:
 
-## 🧑‍💻 Author
+Authorization: Bearer <JWT_TOKEN>
 
-**Ahmad Hassan**
-Java Backend Engineer | Fintech | Microservices | Kubernetes
-```
 
+Response:
+
+{
+  "walletId": 1,
+  "userId": 1,
+  "balance": 1000.00
+}
+
+2️⃣ Add Balance
+
+POST /api/wallets/add
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+
+Request Body:
+
+{
+  "amount": 500.00
+}
+
+
+Response:
+
+{
+  "message": "Balance added successfully",
+  "newBalance": 1500.00
+}
+
+3️⃣ Deduct Balance
+
+POST /api/wallets/deduct
+
+Headers:
+
+Authorization: Bearer <JWT_TOKEN>
+
+
+Request Body:
+
+{
+  "amount": 200.00
+}
+
+
+Response (Success):
+
+{
+  "message": "Balance deducted successfully",
+  "newBalance": 1300.00
+}
+
+
+Response (Failure - Insufficient Funds):
+
+{
+  "error": "Insufficient balance. Transaction declined."
+}
+
+🧠 Technical Highlights
+
+Atomic Transactions: Wallet balance updates are transactional.
+
+Precision Safe: Uses BigDecimal for accurate monetary calculations.
+
+Auto Wallet Creation: Triggered after successful user registration.
+
+JWT Authorization: Ensures only wallet owners can access their data.
+
+🧪 Testing the APIs
+
+You can test using Postman or cURL.
+
+Example Header:
+
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI...
+
+🧭 Folder Structure
+spire-wallet/
+ ┣ src/
+ ┃ ┣ main/
+ ┃ ┃ ┣ java/com/spire/wallet/
+ ┃ ┃ ┃ ┣ controller/
+ ┃ ┃ ┃ ┣ model/
+ ┃ ┃ ┃ ┣ repository/
+ ┃ ┃ ┃ ┣ service/
+ ┃ ┃ ┃ ┗ security/
+ ┃ ┃ ┗ resources/
+ ┃ ┃     ┗ application.yml
+ ┗ pom.xml
