@@ -1,251 +1,130 @@
-🚀 Spire Wallet — Backend
-💡 Overview
+# 🪙 WalletX – Smart Wallet Management System
 
-The Spire Wallet backend is a secure and modular financial service built with Spring Boot (Java 21).
-It provides APIs for user registration, authentication, and wallet balance management with clean architecture and JWT-based authentication.
+## 📘 Project Description
 
-🧱 Tech Stack
-Layer	Technology
-Backend Framework	Spring Boot
-Language	Java 21
-Database	MySQL
-ORM	Spring Data JPA
-Security	Spring Security + JWT
-Build Tool	Maven
-Testing Tool	Postman / cURL
-⚙️ Module 1 — Core App Setup & Authentication
-📖 Overview
+**WalletX** is a secure and modular **Spring Boot application** designed to handle user registration, authentication, and wallet transactions seamlessly.
+It uses **JWT (JSON Web Token)** for authentication and authorization, ensuring secure access to APIs.
+Each registered user automatically gets a wallet, enabling **balance management (credit/debit)** with **transaction safety and validation**.
 
-This module sets up the Spring Boot project structure, integrates Spring Security, and configures JWT-based authentication for secure API access.
+This project demonstrates **production-ready authentication**, **modular structure**, and **clean separation of concerns** following Spring Boot best practices — suitable for fintech or backend microservice-ready systems.
 
-🔑 Features
+---
 
-✅ Spring Boot + JPA setup
-✅ User entity and repository configuration
-✅ JWT-based authentication
-✅ Token filter for secure routes
-✅ Global exception handling
+## 🔐 Authentication Module
 
-📁 Endpoints
-1️⃣ Health Check
+The authentication module ensures that only legitimate users can access the system.
 
-GET /api/health
+### **Key Features**
 
-Verifies that the application is running.
+* **JWT-based Authentication**:
+  Upon successful login, a **JWT token** is generated and returned to the user.
+* **Stateless Security**:
+  Every request is verified through the JWT — no session is stored on the server.
+* **Token Validation**:
+  All secured endpoints are protected through a JWT filter that validates tokens before granting access.
+* **Unauthorized Handling**:
+  Custom `AuthenticationEntryPoint` returns an HTTP 401 response with `"Unauthorized or invalid token"`.
 
-Response:
+### **Authentication Flow**
 
-{
-  "status": "UP"
-}
+1. User registers through `/api/auth/register`
+2. User logs in via `/api/auth/login` → receives JWT token
+3. Client includes JWT in the `Authorization` header for all secured endpoints
+   Example:
 
-2️⃣ Login (JWT Token Generation)
+   ```
+   Authorization: Bearer <jwt_token>
+   ```
+4. Server validates token and provides access to wallet and transaction endpoints
 
-POST /api/auth/login
+---
 
-Authenticates user and returns JWT token.
+## 👤 User Module
 
-Request Body:
+Handles **user registration and authentication** logic.
 
-{
-  "email": "john@example.com",
-  "password": "123456"
-}
+### **Key Responsibilities**
 
+* Register new users with credentials (username, password)
+* Passwords are securely stored using **BCrypt hashing**
+* Auto-create wallet for each registered user
+* Generate JWT tokens during login
 
-Response:
+### **Endpoints**
 
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
+| Method | Endpoint             | Description                         | Auth Required |
+| ------ | -------------------- | ----------------------------------- | ------------- |
+| `POST` | `/api/auth/register` | Register new user                   | ❌             |
+| `POST` | `/api/auth/login`    | Authenticate user and get JWT token | ❌             |
 
-3️⃣ Token Validation
+---
 
-All protected routes (like /api/wallets, /api/users/me) require a valid JWT token in headers:
+## 💼 Wallet Module
 
-Authorization: Bearer <token>
+Each user has a **dedicated wallet** that stores their balance.
+A wallet is automatically created when the user registers.
 
-👤 Module 2 — User Management
-📖 Overview
+### **Key Features**
 
-The User Management Module handles user registration, authentication, and retrieval.
-It also auto-creates a wallet for each new user.
+* Auto-create wallet on user registration
+* Retrieve wallet details for logged-in user
+* Prevent transactions that result in **negative balance**
 
-🔑 Features
+### **Endpoints**
 
-✅ Register users
-✅ Authenticate and generate JWT
-✅ Retrieve user details
-✅ Auto-create wallet upon registration
+| Method | Endpoint             | Description                       | Auth Required |
+| ------ | -------------------- | --------------------------------- | ------------- |
+| `GET`  | `/api/wallet`        | Get current wallet details        | ✅             |
+| `POST` | `/api/wallet/credit` | Add amount to wallet balance      | ✅             |
+| `POST` | `/api/wallet/debit`  | Deduct amount from wallet balance | ✅             |
 
-📁 Endpoints
-1️⃣ Register User
+### **Validation Rules**
 
-POST /api/users/register
+* Credit amount must be **positive**
+* Debit not allowed if `balance < amount`
+* Balance is stored as `BigDecimal` for precision
 
-Request Body:
+---
 
-{
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "123456"
-}
+## 💳 Transaction Module
 
+Handles all **wallet transactions** — credit and debit operations.
 
-Response:
+### **Key Features**
 
-{
-  "message": "User registered successfully!",
-  "walletId": 1
-}
+* Perform balance credit and debit securely
+* Prevent overdraft (negative balance)
+* Log every transaction for audit trail
+* Ensure ACID safety using **Spring Data JPA**
 
-2️⃣ Login User
+### **Flow**
 
-POST /api/users/login
+1. User sends a request (credit/debit)
+2. System fetches wallet and verifies the balance
+3. Updates balance atomically
+4. Returns updated balance in response
 
-Request Body:
+### **Sample Response**
 
-{
-  "email": "john@example.com",
-  "password": "123456"
-}
-
-
-Response:
-
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI..."
-}
-
-3️⃣ Get Logged-in User Details
-
-GET /api/users/me
-
-Headers:
-
-Authorization: Bearer <JWT_TOKEN>
-
-
-Response:
-
-{
-  "id": 1,
-  "username": "john_doe",
-  "email": "john@example.com"
-}
-
-💰 Module 3 — Wallet Management
-📖 Overview
-
-The Wallet Management Module manages wallet balances linked to each user.
-It provides functionality to add funds, deduct funds safely, and retrieve wallet details.
-
-🔑 Features
-
-✅ Auto-created wallet for new users
-✅ Add or deduct balance (using BigDecimal)
-✅ Prevent negative balances
-✅ JWT-secured wallet operations
-
-📁 Endpoints
-1️⃣ Get Wallet Details
-
-GET /api/wallets
-
-Headers:
-
-Authorization: Bearer <JWT_TOKEN>
-
-
-Response:
-
+```json
 {
   "walletId": 1,
-  "userId": 1,
-  "balance": 1000.00
+  "userId": 2,
+  "balance": 1250.50,
+  "message": "Balance updated successfully"
 }
+```
 
-2️⃣ Add Balance
+---
 
-POST /api/wallets/add
+## 🧠 Summary
 
-Headers:
+| Module             | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| **Authentication** | Secure user login using JWT             |
+| **User**           | Manage user registration & credentials  |
+| **Wallet**         | Store and manage wallet balances        |
+| **Transaction**    | Credit/Debit operations with validation |
 
-Authorization: Bearer <JWT_TOKEN>
+---
 
-
-Request Body:
-
-{
-  "amount": 500.00
-}
-
-
-Response:
-
-{
-  "message": "Balance added successfully",
-  "newBalance": 1500.00
-}
-
-3️⃣ Deduct Balance
-
-POST /api/wallets/deduct
-
-Headers:
-
-Authorization: Bearer <JWT_TOKEN>
-
-
-Request Body:
-
-{
-  "amount": 200.00
-}
-
-
-Response (Success):
-
-{
-  "message": "Balance deducted successfully",
-  "newBalance": 1300.00
-}
-
-
-Response (Failure - Insufficient Funds):
-
-{
-  "error": "Insufficient balance. Transaction declined."
-}
-
-🧠 Technical Highlights
-
-Atomic Transactions: Wallet balance updates are transactional.
-
-Precision Safe: Uses BigDecimal for accurate monetary calculations.
-
-Auto Wallet Creation: Triggered after successful user registration.
-
-JWT Authorization: Ensures only wallet owners can access their data.
-
-🧪 Testing the APIs
-
-You can test using Postman or cURL.
-
-Example Header:
-
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI...
-
-🧭 Folder Structure
-spire-wallet/
- ┣ src/
- ┃ ┣ main/
- ┃ ┃ ┣ java/com/spire/wallet/
- ┃ ┃ ┃ ┣ controller/
- ┃ ┃ ┃ ┣ model/
- ┃ ┃ ┃ ┣ repository/
- ┃ ┃ ┃ ┣ service/
- ┃ ┃ ┃ ┗ security/
- ┃ ┃ ┗ resources/
- ┃ ┃     ┗ application.yml
- ┗ pom.xml
